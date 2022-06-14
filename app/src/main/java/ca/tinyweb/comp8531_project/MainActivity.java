@@ -31,23 +31,9 @@ public class MainActivity extends AppCompatActivity {
         long startTimeInMills = System.currentTimeMillis();
 
         for (int i=0; i<=ITERATIONS; i++) {
-            int rand = new Random().nextInt((4 - 1) + 1) + 1;
 
-            switch (rand) {
-                case 1:
-                    mBitmapIn = loadBitmap(R.drawable.data);
-                    break;
-                case 2:
-                    mBitmapIn = loadBitmap(R.drawable.data1);
-                    break;
-                case 3:
-                    mBitmapIn = loadBitmap(R.drawable.data2);
-                    break;
-                case 4:
-                    mBitmapIn = loadBitmap(R.drawable.data3);
-                    break;
-            }
-            mBitmapIn = loadBitmap(R.drawable.data);
+            int resId = getResId();
+            mBitmapIn = loadBitmap(resId);
             mBitmapOut = Bitmap.createBitmap(mBitmapIn.getWidth(), mBitmapIn.getHeight(), mBitmapIn.getConfig());
 
             in.setImageBitmap(mBitmapIn);
@@ -82,5 +68,24 @@ public class MainActivity extends AppCompatActivity {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         return BitmapFactory.decodeResource(getResources(), resource, options);
+    }
+
+    /**
+     * Helper method to randomize the selection of a bitmap
+     * @return The resId of the random bitmap
+     */
+    private int getResId() {
+        int rand = new Random().nextInt((4 - 1) + 1) + 1;
+        switch (rand) {
+            case 1:
+                return R.drawable.data;
+            case 2:
+                return R.drawable.data1;
+            case 3:
+                return R.drawable.data2;
+            case 4:
+                return R.drawable.data3;
+        }
+        return R.drawable.data;
     }
 }
