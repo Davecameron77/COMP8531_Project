@@ -5,7 +5,9 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.renderscript.Allocation;
 import android.renderscript.RenderScript;
+import android.util.Log;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,36 +15,40 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.android.rs.hellocompute.ScriptC_mono;
 
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class MainActivity extends AppCompatActivity {
 
     private Bitmap mBitmapIn;
     private Bitmap mBitmapOut;
     private final int ITERATIONS = 100;
+    private final int NUM_THREADS = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ImageView in = findViewById(R.id.displayin);
-        ImageView out = findViewById(R.id.displayout);
-
+        ExecutorService executorService = Executors.newFixedThreadPool(NUM_THREADS);
         long startTimeInMills = System.currentTimeMillis();
 
         for (int i=0; i<=ITERATIONS; i++) {
+            executorService.submit(() -> new RenderScriptTask(this).run());
+        }
 
-            int resId = getResId();
-            mBitmapIn = loadBitmap(resId);
-            mBitmapOut = Bitmap.createBitmap(mBitmapIn.getWidth(), mBitmapIn.getHeight(), mBitmapIn.getConfig());
+        while (true) {
 
-            in.setImageBitmap(mBitmapIn);
-            createScript();
-            out.setImageBitmap(mBitmapOut);
+            ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executorService;
+            if (threadPoolExecutor.getCompletedTaskCount() == 100) {
+                break;
+            }
         }
 
         long endTimeInMills = System.currentTimeMillis();
         long executionTime = endTimeInMills - startTimeInMills;
+
         Toast.makeText(this, "Execution took " + executionTime + " ms for " + ITERATIONS + " iterations", Toast.LENGTH_LONG).show();
 
     }
@@ -87,5 +93,23 @@ public class MainActivity extends AppCompatActivity {
                 return R.drawable.data3;
         }
         return R.drawable.data;
+    }
+
+    public class RenderScriptTask implements Runnable {
+        MainActivity activity;
+
+        public RenderScriptTask(MainActivity mainActivity) {
+            activity = mainActivity;
+        }
+
+        public void run() {
+            int resId = getResId();
+            mBitmapIn = loadBitmap(resId);
+            mBitmapOut = Bitmap.createBitmap(mBitmapIn.getWidth(), mBitmapIn.getHeight(), mBitmapIn.getConfig());
+
+            ((ImageView) activity.findViewById(R.id.displayin)).setImageBitmap(mBitmapIn);
+            createScript();
+            ((ImageView) activity.findViewById(R.id.displayout)).setImageBitmap(mBitmapOut);
+        }
     }
 }
